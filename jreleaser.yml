@@ -1,0 +1,57 @@
+matrix:
+  rows:
+    - { target: aarch64-apple-darwin,      ext: '',     platform: osx-aarch_64   }
+    - { target: x86_64-apple-darwin,       ext: '',     platform: osx-x86_64     }
+    - { target: aarch64-unknown-linux-gnu, ext: '',     platform: linux-aarch_64 }
+    - { target: x86_64-unknown-linux-gnu,  ext: '',     platform: linux-x86_64   }
+    - { target: x86_64-pc-windows-msvc,    ext: '.exe', platform: windows-x86_64 }
+
+hooks:
+  script:
+    before:
+      - run: |
+          deno compile --target {{ matrix.target }} -o target/{{ matrix.platform }}/helloworld{{ matrix.ext }} main.ts
+        applyDefaultMatrix: true
+        verbose: true
+        filter:
+          includes: ['assemble']
+          
+project:
+  name: helloworld
+  description: HelloWorld in Deno
+  longDescription: HelloWorld in Deno
+  links:
+    homepage: https://github.com/jreleaser/helloworld-deno-slsa
+  authors:
+    - Andres Almiray
+  license: Apache-2.0
+  inceptionYear: 2025
+  stereotype: CLI
+    
+release:
+  github:
+    overwrite: true
+    changelog:
+      formatted: ALWAYS
+      preset: conventional-commits
+      contributors:
+        format: '- {{contributorName}}{{#contributorUsernameAsLink}} ({{.}}){{/contributorUsernameAsLink}}'
+        
+assemble:
+  archive:
+    helloworld:
+      active: ALWAYS
+      formats: [ ZIP ]
+      applyDefaultMatrix: true
+      archiveName: '{{distributionName}}-{{projectVersion}}-{{ matrix.platform }}'
+      fileSets:
+        - input: 'target/{{ matrix.platform }}'
+          output: 'bin'
+          includes: [ 'helloworld{.exe,}' ]
+        - input: '.'
+          includes: [ 'LICENSE' ]
+        
+distributions:
+  helloworld:
+    executable:
+      windowsExtension: exe
